@@ -1,0 +1,134 @@
+
+---
+title: "Network Intrusion Detection Using CIC-IDS-2017"
+author: "Group E: Vishal Kumar, Avanti Gupta, Shivangi Manel"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## 1. Introduction
+
+This project investigates network intrusion detection using the CIC-IDS-2017 
+dataset published by the Canadian Institute for Cybersecurity. Cyberattacks 
+pose a growing threat to modern infrastructure, and the ability to automatically 
+classify malicious network traffic is a critical challenge in cybersecurity. 
+The goal of this analysis is to determine whether network flow features can be 
+used to accurately identify and classify different types of cyberattacks using 
+machine learning models in R.
+
+## 2. Dataset Description
+
+The CIC-IDS-2017 dataset consists of eight CSV files capturing network traffic 
+recorded over five days (Monday through Friday) in a controlled lab environment. 
+After combining all files and removing rows with infinite or missing values, the 
+final cleaned dataset contains 2,827,876 observations and 79 variables. The 78 
+feature variables are all quantitative and describe network flow statistics such 
+as packet lengths, flow duration, inter-arrival times, byte rates, and TCP flag 
+counts. The target variable, Label, is categorical and identifies each flow as 
+either benign or one of 13 attack types including DDoS, PortScan, DoS Hulk, 
+FTP-Patator, SSH-Patator, Bot, and Web Attacks. An additional implicit 
+categorical variable is the time period (day of week) from which each file 
+originates.
+
+## 3. Research Questions
+
+This analysis investigates the following questions. First, can network flow 
+features accurately classify traffic as benign or as a specific attack type? 
+Second, which features are the most important predictors of attack type? 
+Third, how does class imbalance affect model performance, and which model 
+handles minority attack classes better — Random Forest or XGBoost?
+
+## 4. Descriptive Statistics
+
+The table below summarizes key quantitative features across the dataset. 
+Flow Bytes per second shows an extremely large range (from negative values 
+caused by zero-duration flows up to 2 billion), reflecting the diverse nature 
+of network traffic. Packet Length Standard Deviation and Average Packet Size 
+similarly show high variance, suggesting that attack traffic differs 
+substantially from normal traffic in its packet structure. Flow IAT Mean 
+(inter-arrival time) ranges from near zero to 120 million microseconds, 
+capturing both high-speed attack floods and slow-rate attacks.
+
+![Descriptive Statistics](plot5_desc_stats.png)
+
+## 5. Class Distribution
+
+The dataset is severely imbalanced, as shown in the figure below. Benign 
+traffic accounts for over 2.2 million records, while some attack types are 
+extremely rare — Infiltration has only 36 samples and SQL Injection has only 
+21 samples across the entire dataset. This imbalance is a fundamental 
+challenge for classification, as models trained on such data tend to favor 
+the majority class. A log scale is used on the y-axis to make minority 
+classes visible.
+
+![Class Distribution](plot1_class_distribution.png)
+
+## 6. Data Preprocessing
+
+Several preprocessing steps were applied before modeling. Columns with zero 
+variance were removed as they carry no predictive information. Features with 
+pairwise correlation above 0.95 were also removed to reduce redundancy, 
+as shown in the correlation heatmap. Min-max normalization was applied to 
+all remaining numeric features to place them on a common scale. A stratified 
+10% sample of 282,781 rows was drawn to make model training computationally 
+feasible, and classes with fewer than three samples (Heartbleed and SQL 
+Injection) were excluded from modeling. The data was then split into 80% 
+training (226,230 rows) and 20% testing (56,550 rows) using stratified 
+partitioning.
+
+## 7. Feature Importance
+
+After training the Random Forest model, feature importance was assessed using 
+the Mean Decrease in Gini impurity. The figure below shows the top 20 most 
+important predictors. Packet Length Standard Deviation, Average Backward 
+Segment Size, and Packet Length Variance are the three most discriminative 
+features. This suggests that attacks are most distinguishable from benign 
+traffic by the variability and size of their packets rather than their timing 
+or port usage. Destination Port, while ranked 7th, also plays a meaningful 
+role, consistent with the fact that certain attacks target specific ports.
+
+![Feature Importance](plot2_feature_importance.png)
+
+## 8. Model Results
+
+Two classification models were trained and compared: Random Forest with 500 
+trees and XGBoost with 100 boosting rounds. The Random Forest model achieved 
+an overall out-of-bag error rate of 0.2%, indicating excellent overall 
+performance. On the test set, both models achieved near-perfect F1 scores for 
+well-represented classes such as BENIGN (0.999), DDoS (0.999), FTP-Patator 
+(1.000), and PortScan (0.996). However, performance differed notably on 
+minority classes. XGBoost achieved an F1 score of 0.75 for Bot traffic 
+compared to 0.52 for Random Forest, demonstrating that gradient boosting 
+handles class imbalance better in this context. Classes with very few samples 
+such as Infiltration and Web Attack XSS could not be reliably detected by 
+either model, yielding NA or near-zero F1 scores.
+
+![F1 Score Comparison](plot3_f1_comparison.png)
+
+## 9. ROC Curve Analysis
+
+The ROC curve below evaluates the Random Forest model ability to distinguish 
+benign traffic from any attack type. The model achieved an AUC of 0.9998, 
+indicating near-perfect discrimination. The curve rises sharply to the 
+top-left corner, confirming that the model can detect attacks with very high 
+sensitivity while maintaining an extremely low false positive rate. This is 
+particularly important in real network environments where falsely flagging 
+benign traffic would disrupt normal operations.
+
+![ROC Curve](plot4_roc.png)
+
+## 10. Conclusion
+
+This analysis demonstrates that machine learning models trained on network 
+flow statistics can classify cyberattacks with high accuracy. Both Random 
+Forest and XGBoost achieved near-perfect performance on well-represented 
+attack types, with overall error rates below 0.2%. XGBoost outperformed 
+Random Forest on minority attack classes, making it the preferred model 
+for real-world deployment where rare attacks are most dangerous. The primary 
+limitation of this analysis is severe class imbalance — attack types with 
+very few samples could not be reliably detected. Future work should explore 
+oversampling techniques such as SMOTE to improve minority class detection. 
+The most important predictors were packet length statistics, confirming that 
+attacks generate distinctive packet size patterns that distinguish them from 
+normal traffic.
+
