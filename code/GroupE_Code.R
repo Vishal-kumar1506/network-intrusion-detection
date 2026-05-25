@@ -1,8 +1,7 @@
 
 # ============================================================
-# MATH 167R Spring 2026 - Group E
 # Network Intrusion Detection Using CIC-IDS-2017
-# Members: Vishal Kumar, Avanti Gupta, Shivangi Manel
+# Vishal Kumar
 # ============================================================
 
 # ---- SECTION 1: Load Libraries ----
@@ -273,9 +272,4 @@ plot(rf_roc, col = "steelblue", lwd = 2,
 legend("bottomright",
        legend = c(paste("Random Forest AUC =", round(auc(rf_roc), 4))),
        col = "steelblue", lwd = 2)
-
-# ---- SECTION 9: Render Final Report ----
-render("GroupE_Report.Rmd")
-cat("All done! Report saved as GroupE_Report.html
-")
 
